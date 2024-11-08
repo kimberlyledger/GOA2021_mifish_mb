@@ -1,2 +1,34 @@
 # GOA2021_mifish_mb
-updated data processing for 2021 GOA pcod survey metabarcoding mifish data
+
+this repo includes updated data processing for 2021 GOA pcod survey metabarcoding mifish data
+
+Part 1: Initial data processing - location: sedna (161.55.52.157)
+A) Prepare raw sequence data for dadasnake (https://github.com/a-h-b/dadasnake)
+- upload raw sequence data to sedna and create sample sheet .tsv (see "sample_names_for_dadasnake.Rmd" for an example using different data)
+- also see: https://docs.google.com/document/d/1c1M6ogmohUGKUzT1WgDech0DI_4ZvXzaO0uVcYC_TdQ/edit?usp=sharing
+B) Run cutadapt and dada2 using dadasnake
+- set parameters within config.mifish.2021GOA.yaml and run dadasnake.sh on sedna  
+- default setting were used except for (1) trunc_length: 100/100; (2) min_overlap: 10; (3) pool: pseudo; (4) target_min_length: 162; (5) target_max_length: 186 
+C) Run blastn on ASVs (post/filtered.seqs.fasta) using ncbi nt database as reference 
+- update input/output file paths within blastn.sh, and make a folder for blast outputs (home/kledger/blast/GOA2021_mifish_20241106)
+- blastn parameters: -perc_identity 96 -qcov_hsp_perc 98
+
+- also blast fasta against our custom salmon and gadid reference databases (note: these dbs might need a bit more work...)
+blastn -query dadasnake_20241106/filtered.seqs.fasta -db /genetics/edna/custom_dbs/gadidae_db -out gadidae_results.txt -perc_identity 98 -qcov_hsp_perc 100 -num_threads 10 -outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore sscinames staxids'
+
+blastn -query dadasnake_20241106/filtered.seqs.fasta -db /genetics/edna/custom_dbs/oncorhynchus_db -out oncorhynchus_results.txt -perc_identity 98 -qcov_hsp_perc 100 -num_threads 10 -outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore sscinames staxids'
+
+
+Part 2: Taxonomic assignment using blast output - location: eDNA VM (161.55.97.134)
+A) run "part2_taxonomic_assignment_blastn.Rmd"
+
+note: looks pretty good but could likely benefit from additional filtering and grouping of taxa ids made up of distint species 
+working document on tax assignment thoughts: https://docs.google.com/document/d/1IwNT3KOPqcSyNkB1Q4D5HayEa8FHgSdr--XiVQwj-N0/edit?usp=sharing
+
+Part 3: Data decontamination - location: eDNA VM (161.55.97.134)
+A) run "part3_decontamination.Rmd"
+
+
+
+
+

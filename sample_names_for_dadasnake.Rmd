@@ -1,0 +1,118 @@
+---
+title: "create sample name file for dadasnake"
+output: html_document
+date: "2023-10-26"
+---
+
+load libraries
+```{r}
+library(utils)
+library(purrr)
+```
+
+first, unzip folder with fastq reads on Y drive. then, set working directory to folder containing unzipped fastq files
+```{r setup, include=FALSE}
+#knitr::opts_knit$set(root.dir = "Y:/ABL_Genetics/Lab_data/MiSeq_data/kim_temporary/20240820_nsmock/")
+```
+
+
+get sample names and r1 and r2 file names to use with dadasnake 
+```{r}
+# List the files with a .fastq extension
+files <- list.files(pattern = "\\.fastq.gz$")
+
+# Filter out files that start with "Undetermined"
+files <- files[!grepl("^Undetermined", files)]
+
+## if multiple projects/amplicons were lumped onto the same miseq run, divide up into in folders.  
+#files <- files[!grepl("18S", files)]
+#files <- files[!grepl("MiFish", files)]
+
+# Initialize data frame with a single row
+df <- data.frame(
+  sample = character(1),
+  library = character(1),
+  run = numeric(1),
+  r1_file = character(1),
+  r2_file = character(1),
+  stringsAsFactors = FALSE
+)
+
+# Initialize vectors for storing sample IDs
+sample_ids <- character(0)
+
+# Iterate through the remaining files
+for (filename in files) {
+  parts <- unlist(strsplit(filename, "_"))
+  if (length(parts) >= 3) {
+  #if (length(parts) >= 1) {
+    library <- parts[1]
+    is_r1 <- grepl("_R1_", filename)
+    is_r2 <- grepl("_R2_", filename)
+    #is_r1 <- grepl("_R1.", filename)
+    #is_r2 <- grepl("_R2.", filename)
+
+    if (library %in% sample_ids) {
+      # Update existing row
+      idx <- which(df$sample == library)
+      if (is_r1) {
+        df[idx, "r1_file"] <- filename
+      }
+      if (is_r2) {
+        df[idx, "r2_file"] <- filename
+      }
+    } else {
+      # Add a new row
+      sample_ids <- c(sample_ids, library)
+      new_row <- data.frame(
+        sample = library,
+        library = library,
+        run = 2,
+        r1_file = ifelse(is_r1, filename, ""),
+        r2_file = ifelse(is_r2, filename, ""),
+        stringsAsFactors = FALSE
+      )
+      df <- rbind(df, new_row)
+    }
+  }
+}
+
+# Remove the initial empty row - if combining multiple miseq runs, each will need to be processed seperately
+#df_run1 <- df[-1, ]
+#df_run2 <- df[-1, ]
+#df_run3 <- df[-1, ]
+#df_run4 <- df[-1, ]
+
+df <- df[-1, ]
+```
+
+combine multiple runs, if applicable
+```{r}
+# library(dplyr)
+# df_all <- df_run1 %>%
+#   bind_rows(df_run2) %>%
+#   bind_rows(df_run3) %>%
+#   bind_rows(df_run4)
+```
+
+add seq date to sample/library name so that dadasnake keeps the twiced sequenced samples separate, if applicable 
+```{r}
+# df_all_w_date <- df_all %>%
+#   mutate(date = ifelse(run == "1", "20240423", NA),
+#          date = ifelse(run == "2", "20240509", date),
+#          date = ifelse(run == "3", "20240611", date),
+#          date = ifelse(run == "4", "20240613", date)) %>%
+#   unite(col = "sample_date", sample, date, sep = "-") %>%
+#   mutate(library = sample_date) %>%
+#   rename(sample = sample_date)
+```
+
+
+```{r}
+# Write the data frame to a TSV file
+write.table(df, file = "~/nsmock_samples.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+```
+
+upload .tsv to Sedna so it is within the same folder as the raw fastq files on Sedna 
+
+remove unzipped folder from genetics shared drive after creating this file 

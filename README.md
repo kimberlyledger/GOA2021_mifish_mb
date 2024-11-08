@@ -26,7 +26,20 @@ note: looks pretty good but could likely benefit from additional filtering and g
 working document on tax assignment thoughts: https://docs.google.com/document/d/1IwNT3KOPqcSyNkB1Q4D5HayEa8FHgSdr--XiVQwj-N0/edit?usp=sharing
 
 Part 3: Data decontamination - location: eDNA VM (161.55.97.134)
-A) run "part3_decontamination.Rmd"
+A) run "part3_decontamination.Rmd". the decontamination steps included are: 
+step 1: tag-jumping - subtract the proportion of reads that jumped into the positive control samples from each environmental sample 
+step 2: remove ASVs that don't get a fish taxonomic assignment 
+step 3: remove any ASVs that don't show up in field samples 
+step 4: remove low read depth samples based on ASV accumulation curve  
+step 5: check dissimilarity across PCR replicates and remove any replicates with high dissimilarity or only one PCR replicate remaining
+step 6: remove the samples from unknown sampling locations 
+step 7: remove ASVs with no reads in remaining PCR replicates
+
+note: depending on how we use the data, removing dissimilar/singular PCR replicates may not be the way to go. 
+
+Part 4: Data exploration
+- ongoing
+
 
 
 
